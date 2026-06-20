@@ -28,6 +28,12 @@ public class Player {
 
     private String photoUrl;
 
+    @jakarta.persistence.Lob
+    @Column(name = "photo_data", columnDefinition = "bytea")
+    private byte[] photoData;
+
+    private String photoContentType;
+
     private Integer jerseyNumber;
 
     @ManyToOne
@@ -67,6 +73,22 @@ public class Player {
 
     public void setPhotoUrl(String photoUrl) {
         this.photoUrl = photoUrl;
+    }
+
+    public byte[] getPhotoData() {
+        return photoData;
+    }
+
+    public void setPhotoData(byte[] photoData) {
+        this.photoData = photoData;
+    }
+
+    public String getPhotoContentType() {
+        return photoContentType;
+    }
+
+    public void setPhotoContentType(String photoContentType) {
+        this.photoContentType = photoContentType;
     }
 
     public Integer getJerseyNumber() {

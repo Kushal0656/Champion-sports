@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -40,5 +41,25 @@ public class ContentController {
     @DeleteMapping("/{id}")
     public void deleteContent(@PathVariable Long id) {
         contentService.deleteContent(id);
+    }
+
+    @GetMapping("/key/{keyName}")
+    public Content getContentByKeyOptional(@PathVariable String keyName) {
+        return contentService.getContentByKeyOptional(keyName);
+    }
+
+    @PostMapping("/key/{keyName}")
+    public Content updateContentByKey(
+            @PathVariable String keyName,
+            @RequestParam("value") String value
+    ) {
+        Content content = contentService.getContentByKeyOptional(keyName);
+        if (content == null) {
+            content = new Content();
+            content.setKeyName(keyName);
+            content.setDescription("Auto-created setting via endpoint");
+        }
+        content.setValue(value);
+        return contentService.saveContent(content);
     }
 }

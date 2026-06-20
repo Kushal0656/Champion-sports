@@ -22,3 +22,15 @@ target/
 
 ### Logs ###
 *.log
+
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Production
+frontend/dist/
+dist/
+
+# Uploads & Env
+uploads/
+.env

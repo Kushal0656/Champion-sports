@@ -37,4 +37,8 @@ public class ContentService {
     public void deleteContent(Long id) {
         contentRepository.deleteById(id);
     }
+
+    public Content getContentByKeyOptional(String keyName) {
+        return contentRepository.findByKeyName(keyName).orElse(null);
+    }
 }

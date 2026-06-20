@@ -10,4 +10,8 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
 
     List<Player> findByTeam(Team team);
 
+    List<Player> findByTeamId(Long teamId);
+
+    List<Player> findByJerseyNumber(Integer jerseyNumber);
+
 }

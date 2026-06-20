@@ -40,6 +40,7 @@ public class TeamService {
         existingTeam.setLogoUrl(updatedTeam.getLogoUrl());
         existingTeam.setDescription(updatedTeam.getDescription());
         existingTeam.setCaptain(updatedTeam.getCaptain());
+        existingTeam.setTeamLeader(updatedTeam.getTeamLeader());
 
         existingTeam.setUpdatedAt(LocalDateTime.now());
 
@@ -48,5 +49,14 @@ public class TeamService {
 
     public void deleteTeam(Long id) {
         teamRepository.deleteById(id);
+    }
+
+    public void saveLogo(Long id, byte[] data, String contentType) {
+        Team team = getTeamById(id);
+        team.setLogoData(data);
+        team.setLogoContentType(contentType);
+        team.setLogoUrl("/api/teams/" + id + "/logo");
+        team.setUpdatedAt(LocalDateTime.now());
+        teamRepository.save(team);
     }
 }

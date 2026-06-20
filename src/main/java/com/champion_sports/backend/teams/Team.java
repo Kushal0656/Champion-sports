@@ -24,10 +24,18 @@ public class Team {
 
     private String logoUrl;
 
+    @Column(name = "logo_data", columnDefinition = "bytea")
+    private byte[] logoData;
+
+    private String logoContentType;
+
     @Column(columnDefinition = "TEXT")
     private String description;
 
     private String captain;
+
+    @Column(name = "team_leader")
+    private String teamLeader;
 
     private LocalDateTime createdAt;
 
@@ -64,6 +72,22 @@ public class Team {
         this.logoUrl = logoUrl;
     }
 
+    public byte[] getLogoData() {
+        return logoData;
+    }
+
+    public void setLogoData(byte[] logoData) {
+        this.logoData = logoData;
+    }
+
+    public String getLogoContentType() {
+        return logoContentType;
+    }
+
+    public void setLogoContentType(String logoContentType) {
+        this.logoContentType = logoContentType;
+    }
+
     public String getDescription() {
         return description;
     }
@@ -78,6 +102,14 @@ public class Team {
 
     public void setCaptain(String captain) {
         this.captain = captain;
+    }
+
+    public String getTeamLeader() {
+        return teamLeader;
+    }
+
+    public void setTeamLeader(String teamLeader) {
+        this.teamLeader = teamLeader;
     }
 
     public LocalDateTime getCreatedAt() {
