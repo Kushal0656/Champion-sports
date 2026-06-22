@@ -53,7 +53,6 @@ def train_xgboost_model(df: pd.DataFrame, model_save_path: str) -> dict:
             max_depth=4,
             learning_rate=0.08,
             random_state=42,
-            use_label_encoder=False,
             eval_metric="logloss"
         )
     except ImportError:
