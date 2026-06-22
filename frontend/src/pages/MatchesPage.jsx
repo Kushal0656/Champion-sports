@@ -34,6 +34,66 @@ export default function MatchesPage() {
   const [oddsDraw, setOddsDraw] = useState("");
   const [oddsBookmaker, setOddsBookmaker] = useState("");
 
+  // Odds API states
+  const [apiEvents, setApiEvents] = useState([]);
+  const [selectedApiEventId, setSelectedApiEventId] = useState("");
+  const [isFetchingApi, setIsFetchingApi] = useState(false);
+  const [showApiSelector, setShowApiSelector] = useState(false);
+
+  const handleFetchApiEvents = async () => {
+    setIsFetchingApi(true);
+    try {
+      const response = await fetch(
+        `https://api.odds-api.io/v3/events?sport=cricket&apiKey=6f92fa5b8e4de6fac35701a7bd2def125ea28bcbcc682d890e35418747178b25`
+      );
+      const data = await response.json();
+      setApiEvents(data || []);
+      setShowApiSelector(true);
+    } catch (error) {
+      console.error("Failed to fetch events from API", error);
+      alert("Failed to load events from Odds API");
+    } finally {
+      setIsFetchingApi(false);
+    }
+  };
+
+  const handleFetchOddsForEvent = async (eventId) => {
+    if (!eventId) return;
+    setIsFetchingApi(true);
+    try {
+      const response = await fetch(
+        `https://api.odds-api.io/v3/odds?eventId=${eventId}&bookmakers=Bovada,Unibet&apiKey=6f92fa5b8e4de6fac35701a7bd2def125ea28bcbcc682d890e35418747178b25`
+      );
+      const data = await response.json();
+      
+      if (!data.bookmakers || Object.keys(data.bookmakers).length === 0) {
+        alert("No active odds found for this match on Bovada or Unibet. Try entering manual odds.");
+        return;
+      }
+
+      // Pick first available bookmaker
+      const bookmakerName = Object.keys(data.bookmakers)[0];
+      const markets = data.bookmakers[bookmakerName];
+      const market = markets.find(m => m.name === "h2h" || m.name === "match_winner") || markets[0];
+      
+      if (market && market.odds && market.odds.length > 0) {
+        const oddsItem = market.odds[0];
+        setOddsTeamA(oddsItem.home || "1.90");
+        setOddsTeamB(oddsItem.away || "1.90");
+        setOddsDraw(oddsItem.draw || "4.00");
+        setOddsBookmaker(oddsItem.home || "1.90"); // Default bookmaker odds to home/avg
+        alert(`Successfully fetched odds from ${bookmakerName}!`);
+      } else {
+        alert("Could not find match winner odds for this match.");
+      }
+    } catch (error) {
+      console.error("Failed to fetch odds for event", error);
+      alert("Failed to load odds for the selected event");
+    } finally {
+      setIsFetchingApi(false);
+    }
+  };
+
   const handleOpenOddsConfig = async (matchId) => {
     try {
       const response = await axiosClient.get(`/admin/match-odds/${matchId}`);
@@ -43,6 +103,8 @@ export default function MatchesPage() {
       setOddsDraw(data.drawOdds || "4.00");
       setOddsBookmaker(data.bookmakerOdds || "1.90");
       setEditingOddsMatchId(matchId);
+      setShowApiSelector(false);
+      setSelectedApiEventId("");
     } catch (error) {
       console.error("Failed to load odds", error);
       setOddsTeamA("1.90");
@@ -50,6 +112,8 @@ export default function MatchesPage() {
       setOddsDraw("4.00");
       setOddsBookmaker("1.90");
       setEditingOddsMatchId(matchId);
+      setShowApiSelector(false);
+      setSelectedApiEventId("");
     }
   };
 
@@ -469,7 +533,40 @@ export default function MatchesPage() {
 
                 {editingOddsMatchId === match.id && (
                   <div style={{ marginTop: "1rem", padding: "1rem", backgroundColor: "var(--bg-app)", borderRadius: "8px", border: "1px solid var(--border-light)" }}>
-                    <h4 style={{ margin: "0 0 1rem 0", fontSize: "0.9rem" }}>🎯 Configure Match & Bookmaker Odds</h4>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", flexWrap: "wrap", gap: "0.5rem" }}>
+                      <h4 style={{ margin: 0, fontSize: "0.9rem" }}>🎯 Configure Match & Bookmaker Odds</h4>
+                      <button 
+                        className="btn btn-secondary" 
+                        style={{ padding: "0.35rem 0.75rem", fontSize: "0.75rem", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
+                        onClick={handleFetchApiEvents}
+                        disabled={isFetchingApi}
+                      >
+                        {isFetchingApi ? "⏳ Fetching..." : "🔍 Auto-Fetch (Odds API)"}
+                      </button>
+                    </div>
+
+                    {showApiSelector && (
+                      <div style={{ marginBottom: "1rem", padding: "0.75rem", backgroundColor: "var(--primary-light)", borderRadius: "6px" }}>
+                        <label className="form-label" style={{ fontSize: "0.75rem", color: "var(--primary)", fontWeight: "600", marginBottom: "0.25rem", display: "block" }}>Select Game from Odds-API.io</label>
+                        <select 
+                          className="form-select" 
+                          style={{ fontSize: "0.8rem", padding: "0.4rem 0.60rem" }}
+                          value={selectedApiEventId}
+                          onChange={(e) => {
+                            setSelectedApiEventId(e.target.value);
+                            handleFetchOddsForEvent(e.target.value);
+                          }}
+                        >
+                          <option value="">-- Choose matching game --</option>
+                          {apiEvents.map((evt) => (
+                            <option key={evt.id} value={evt.id}>
+                              {evt.home} vs {evt.away} ({evt.league?.name || "Cricket"})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "0.75rem", marginBottom: "1rem" }}>
                       <div className="form-group" style={{ marginBottom: 0 }}>
                         <label className="form-label" style={{ fontSize: "0.75rem" }}>Team A Odds</label>
