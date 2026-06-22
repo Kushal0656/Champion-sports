@@ -22,6 +22,8 @@ export default function TeamsPage() {
   const [searchJersey, setSearchJersey] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [playerToRemove, setPlayerToRemove] = useState(null);
+  const [playerToAdd, setPlayerToAdd] = useState(null);
 
   const loadTeamPlayers = async (teamId) => {
     try {
@@ -82,12 +84,10 @@ export default function TeamsPage() {
   };
 
   const handleAssignPlayer = async (player) => {
-    const confirmAdd = window.confirm(`Are you sure you want to add ${player.name} to ${selectedTeam.name}?`);
-    if (!confirmAdd) return;
-
     try {
       await assignPlayerTeam(player.id, selectedTeam.id);
       alert("Player added to team successfully!");
+      setPlayerToAdd(null);
       loadTeamPlayers(selectedTeam.id);
       setSearchJersey("");
       setSearchResults([]);
@@ -98,12 +98,10 @@ export default function TeamsPage() {
   };
 
   const handleRemovePlayer = async (player) => {
-    const confirmRemove = window.confirm(`Are you sure you want to remove ${player.name} from ${selectedTeam.name}?`);
-    if (!confirmRemove) return;
-
     try {
       await removePlayerTeam(player.id);
       alert("Player removed from team successfully!");
+      setPlayerToRemove(null);
       loadTeamPlayers(selectedTeam.id);
     } catch (err) {
       console.error(err);
@@ -356,6 +354,8 @@ export default function TeamsPage() {
                 setSelectedTeam(null);
                 setSearchResults([]);
                 setSearchJersey("");
+                setPlayerToRemove(null);
+                setPlayerToAdd(null);
               }}
             >
               ✕
@@ -467,13 +467,33 @@ export default function TeamsPage() {
                           <span style={{ fontWeight: "800", color: "var(--primary)", fontSize: "0.9rem", marginRight: "0.5rem" }}>#{player.jerseyNumber}</span>
                         )}
                         {loggedIn && (
-                          <button
-                            className="btn btn-secondary"
-                            style={{ padding: "0.2rem 0.5rem", fontSize: "0.8rem", color: "#ef4444", borderColor: "#fecaca" }}
-                            onClick={() => handleRemovePlayer(player)}
-                          >
-                            Remove
-                          </button>
+                          playerToRemove?.id === player.id ? (
+                            <div style={{ display: "flex", gap: "0.3rem", alignItems: "center" }}>
+                              <span style={{ fontSize: "0.8rem", color: "#ef4444", fontWeight: "600" }}>Confirm?</span>
+                              <button
+                                className="btn btn-primary"
+                                style={{ padding: "0.2rem 0.5rem", fontSize: "0.8rem", backgroundColor: "#ef4444", borderColor: "#ef4444" }}
+                                onClick={(e) => { e.stopPropagation(); handleRemovePlayer(player); }}
+                              >
+                                Yes
+                              </button>
+                              <button
+                                className="btn btn-secondary"
+                                style={{ padding: "0.2rem 0.5rem", fontSize: "0.8rem" }}
+                                onClick={(e) => { e.stopPropagation(); setPlayerToRemove(null); }}
+                              >
+                                No
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              className="btn btn-secondary"
+                              style={{ padding: "0.2rem 0.5rem", fontSize: "0.8rem", color: "#ef4444", borderColor: "#fecaca" }}
+                              onClick={(e) => { e.stopPropagation(); setPlayerToRemove(player); }}
+                            >
+                              Remove
+                            </button>
+                          )
                         )}
                       </div>
                     ))}
@@ -521,9 +541,29 @@ export default function TeamsPage() {
                                 Current: {player.team ? player.team.name : "Free Agent"}
                               </span>
                             </div>
-                            <button className="btn btn-primary" style={{ padding: "0.2rem 0.6rem", fontSize: "0.8rem" }} onClick={() => handleAssignPlayer(player)}>
-                              Add to Team
-                            </button>
+                            playerToAdd?.id === player.id ? (
+                              <div style={{ display: "flex", gap: "0.3rem", alignItems: "center" }}>
+                                <span style={{ fontSize: "0.8rem", color: "var(--primary)", fontWeight: "600" }}>Confirm?</span>
+                                <button
+                                  className="btn btn-primary"
+                                  style={{ padding: "0.2rem 0.6rem", fontSize: "0.8rem", backgroundColor: "var(--primary)" }}
+                                  onClick={(e) => { e.stopPropagation(); handleAssignPlayer(player); }}
+                                >
+                                  Yes
+                                </button>
+                                <button
+                                  className="btn btn-secondary"
+                                  style={{ padding: "0.2rem 0.6rem", fontSize: "0.8rem" }}
+                                  onClick={(e) => { e.stopPropagation(); setPlayerToAdd(null); }}
+                                >
+                                  No
+                                </button>
+                              </div>
+                            ) : (
+                              <button className="btn btn-primary" style={{ padding: "0.2rem 0.6rem", fontSize: "0.8rem" }} onClick={(e) => { e.stopPropagation(); setPlayerToAdd(player); }}>
+                                Add to Team
+                              </button>
+                            )
                           </div>
                         ))}
                       </div>

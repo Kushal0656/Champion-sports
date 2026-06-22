@@ -12,7 +12,8 @@ const ALL_APIS = [
   { value: "SESSION_RESULT", label: "Session Results (SESSION_RESULT)", path: "/api/v1/result/session_result.php?eventId=1" },
   { value: "TV", label: "Live TV (TV)", path: "/tv.php?eventId=1" },
   { value: "SCORE", label: "Scorecard (SCORE)", path: "/score.php?eventId=1" },
-  { value: "TOSS", label: "Toss Market (TOSS)", path: "/api/v1/get/toss/1" }
+  { value: "TOSS", label: "Toss Market (TOSS)", path: "/api/v1/get/toss/1" },
+  { value: "TIED", label: "Tied Market (TIED)", path: "/api/v1/get/tied/1" }
 ];
 
 export default function ApiKeysPage() {

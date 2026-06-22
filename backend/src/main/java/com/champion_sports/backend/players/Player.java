@@ -28,7 +28,6 @@ public class Player {
 
     private String photoUrl;
 
-    @jakarta.persistence.Lob
     @Column(name = "photo_data", columnDefinition = "bytea")
     private byte[] photoData;
 

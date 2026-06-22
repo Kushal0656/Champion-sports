@@ -371,4 +371,63 @@ public class DeveloperApiController {
 
         return ResponseEntity.ok(tossDetails);
     }
+
+    // 10. Get Tied Market
+    @GetMapping({"/api/v1/get/tied/{eventId}", "/api/v1/get/tied"})
+    public ResponseEntity<?> getTied(
+            HttpServletRequest request,
+            @PathVariable(required = false) Long eventId,
+            @RequestParam(required = false) Long id,
+            @RequestParam(required = false) String clientId,
+            @RequestParam(required = false) String token
+    ) {
+        DeveloperKey key = getAuthorizedKey(request, clientId, token);
+        if (key == null) {
+            return unauthorizedResponse();
+        }
+        if (!hasPermission(key, "TIED")) {
+            return forbiddenResponse("Tied Market (TIED)");
+        }
+        Long targetMatchId = eventId != null ? eventId : id;
+        if (targetMatchId == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "eventId or id parameter is required"));
+        }
+
+        Optional<Match> matchOpt = matchRepository.findById(targetMatchId);
+        if (matchOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        Match match = matchOpt.get();
+
+        List<Map<String, Object>> tiedMarket = new ArrayList<>();
+        
+        Map<String, Object> runner1 = new HashMap<>();
+        runner1.put("mid", String.valueOf(targetMatchId));
+        runner1.put("openDate", match.getMatchDate() != null ? match.getMatchDate().toString() : "");
+        runner1.put("sid", "1");
+        runner1.put("nat", match.getTeamA() != null ? match.getTeamA().getName() : "Team A");
+        runner1.put("b1", 98);
+        runner1.put("bs1", 0);
+        runner1.put("l1", 0);
+        runner1.put("ls1", 0);
+        runner1.put("s", "ACTIVE");
+        runner1.put("sr", "1");
+        
+        Map<String, Object> runner2 = new HashMap<>();
+        runner2.put("mid", String.valueOf(targetMatchId));
+        runner2.put("openDate", match.getMatchDate() != null ? match.getMatchDate().toString() : "");
+        runner2.put("sid", "2");
+        runner2.put("nat", match.getTeamB() != null ? match.getTeamB().getName() : "Team B");
+        runner2.put("b1", 98);
+        runner2.put("bs1", 0);
+        runner2.put("l1", 0);
+        runner2.put("ls1", 0);
+        runner2.put("s", "ACTIVE");
+        runner2.put("sr", "2");
+        
+        tiedMarket.add(runner1);
+        tiedMarket.add(runner2);
+
+        return ResponseEntity.ok(tiedMarket);
+    }
 }

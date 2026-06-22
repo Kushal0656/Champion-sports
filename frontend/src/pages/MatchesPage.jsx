@@ -33,12 +33,14 @@ export default function MatchesPage() {
   const [oddsTeamB, setOddsTeamB] = useState("");
   const [oddsDraw, setOddsDraw] = useState("");
   const [oddsBookmaker, setOddsBookmaker] = useState("");
+  const [matchOddsData, setMatchOddsData] = useState({});
 
   // Odds API states
   const [apiEvents, setApiEvents] = useState([]);
   const [selectedApiEventId, setSelectedApiEventId] = useState("");
   const [isFetchingApi, setIsFetchingApi] = useState(false);
   const [showApiSelector, setShowApiSelector] = useState(false);
+  const [isCalculatingPerformance, setIsCalculatingPerformance] = useState(false);
 
   const handleFetchApiEvents = async () => {
     setIsFetchingApi(true);
@@ -127,9 +129,28 @@ export default function MatchesPage() {
       });
       alert("Odds configured successfully!");
       setEditingOddsMatchId(null);
+      loadMatches();
     } catch (error) {
       console.error("Failed to save odds", error);
       alert("Failed to save odds");
+    }
+  };
+
+  const handleCalculatePerformanceOdds = async (matchId) => {
+    setIsCalculatingPerformance(true);
+    try {
+      const response = await axiosClient.get(`/admin/match-odds/${matchId}/calculate`);
+      const data = response.data;
+      setOddsTeamA(data.teamAOdds);
+      setOddsTeamB(data.teamBOdds);
+      setOddsDraw(data.drawOdds);
+      setOddsBookmaker(data.bookmakerOdds);
+      alert("Automatically calculated odds based on team performance!");
+    } catch (error) {
+      console.error("Failed to calculate performance odds", error);
+      alert("Failed to calculate performance-based odds");
+    } finally {
+      setIsCalculatingPerformance(false);
     }
   };
 
@@ -144,6 +165,19 @@ export default function MatchesPage() {
     try {
       const data = await getMatches();
       setMatches(data);
+
+      const oddsMap = {};
+      await Promise.all(
+        data.map(async (m) => {
+          try {
+            const response = await axiosClient.get(`/admin/match-odds/${m.id}`);
+            oddsMap[m.id] = response.data;
+          } catch (e) {
+            // Ignore if no odds set yet or API error
+          }
+        })
+      );
+      setMatchOddsData(oddsMap);
     } catch (error) {
       console.error("Error loading matches", error);
     }
@@ -482,7 +516,25 @@ export default function MatchesPage() {
                     </div>
                   )
                 )}
-
+                {matchOddsData[match.id] && (
+                  <div style={{ display: "flex", gap: "0.75rem", fontSize: "0.8rem", padding: "0.6rem 0.75rem", backgroundColor: "rgba(255, 255, 255, 0.03)", borderRadius: "8px", border: "1px solid var(--border-light)", color: "var(--text-secondary)", flexWrap: "wrap" }}>
+                    <span style={{ display: "flex", gap: "0.25rem" }}>🎯 <b>Odds:</b> {match.teamA?.name || "Team A"}: <span style={{ color: "var(--primary)", fontWeight: "700" }}>{matchOddsData[match.id].teamAOdds}</span></span>
+                    <span>•</span>
+                    <span>{match.teamB?.name || "Team B"}: <span style={{ color: "var(--primary)", fontWeight: "700" }}>{matchOddsData[match.id].teamBOdds}</span></span>
+                    {matchOddsData[match.id].drawOdds && (
+                      <>
+                        <span>•</span>
+                        <span>Draw: <span style={{ color: "var(--text-muted)", fontWeight: "700" }}>{matchOddsData[match.id].drawOdds}</span></span>
+                      </>
+                    )}
+                    {matchOddsData[match.id].bookmakerOdds && (
+                      <>
+                        <span>•</span>
+                        <span>Bookmaker: <span style={{ color: "var(--success)", fontWeight: "700" }}>{matchOddsData[match.id].bookmakerOdds}</span></span>
+                      </>
+                    )}
+                  </div>
+                )}
                 <div style={{ borderTop: "1px solid var(--border-light)", paddingTop: "1rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem" }}>
                   <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", fontSize: "0.85rem", color: "var(--text-secondary)" }}>
                     <span>📅 {new Date(match.matchDate).toLocaleString()}</span>
@@ -535,14 +587,24 @@ export default function MatchesPage() {
                   <div style={{ marginTop: "1rem", padding: "1rem", backgroundColor: "var(--bg-app)", borderRadius: "8px", border: "1px solid var(--border-light)" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", flexWrap: "wrap", gap: "0.5rem" }}>
                       <h4 style={{ margin: 0, fontSize: "0.9rem" }}>🎯 Configure Match & Bookmaker Odds</h4>
-                      <button 
-                        className="btn btn-secondary" 
-                        style={{ padding: "0.35rem 0.75rem", fontSize: "0.75rem", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
-                        onClick={handleFetchApiEvents}
-                        disabled={isFetchingApi}
-                      >
-                        {isFetchingApi ? "⏳ Fetching..." : "🔍 Auto-Fetch (Odds API)"}
-                      </button>
+                      <div style={{ display: "flex", gap: "0.5rem" }}>
+                        <button 
+                          className="btn btn-secondary" 
+                          style={{ padding: "0.35rem 0.75rem", fontSize: "0.75rem", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
+                          onClick={() => handleCalculatePerformanceOdds(match.id)}
+                          disabled={isCalculatingPerformance}
+                        >
+                          {isCalculatingPerformance ? "⏳ Calculating..." : "📊 Auto-Calculate (Performance)"}
+                        </button>
+                        <button 
+                          className="btn btn-secondary" 
+                          style={{ padding: "0.35rem 0.75rem", fontSize: "0.75rem", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
+                          onClick={handleFetchApiEvents}
+                          disabled={isFetchingApi}
+                        >
+                          {isFetchingApi ? "⏳ Fetching..." : "🔍 Auto-Fetch (Odds API)"}
+                        </button>
+                      </div>
                     </div>
 
                     {showApiSelector && (
