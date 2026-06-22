@@ -14,6 +14,8 @@ services:
         value: npg_dcJAOqzfL26u
       - key: PORT
         value: 8080
+      - key: ML_SERVICE_URL
+        value: https://champion-sports-ml.onrender.com
 
   # 2. Frontend Web Service (React Static Site)
   - type: web
@@ -34,3 +36,12 @@ services:
         value: https://champion-sports-backend.onrender.com
       - key: VITE_WS_BASE_URL
         value: wss://champion-sports-backend.onrender.com
+
+  # 3. ML Web Service (Python FastAPI)
+  - type: web
+    name: champion-sports-ml
+    env: python
+    rootDir: ml-service
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
