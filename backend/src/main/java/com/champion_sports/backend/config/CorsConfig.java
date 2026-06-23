@@ -16,37 +16,21 @@ public class CorsConfig {
 
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(
-                List.of(
-                    "http://localhost:5173",
-                    "http://localhost:5174",
-                    "http://localhost:5175",
-                    "http://localhost:3000",
-                    "https://champion-sports-frontend.onrender.com"
-                )
-        );
+        // Allow all origins (localhost for dev, Render for production)
+        configuration.setAllowedOriginPatterns(List.of("*"));
 
         configuration.setAllowedMethods(
                 List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
         );
 
-        configuration.setAllowedHeaders(
-                List.of("*")
-        );
+        configuration.setAllowedHeaders(List.of("*"));
 
-        configuration.setExposedHeaders(
-                List.of("Authorization", "Content-Type")
-        );
-
-        configuration.setAllowCredentials(true);
+        configuration.setAllowCredentials(false);
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
 
-        source.registerCorsConfiguration(
-                "/**",
-                configuration
-        );
+        source.registerCorsConfiguration("/**", configuration);
 
         return source;
     }
