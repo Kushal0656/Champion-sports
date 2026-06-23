@@ -80,7 +80,7 @@ export default function DashboardPage() {
     loadTournaments();
     loadLiveMatchConfig();
 
-    // Auto-refresh scorecard of the selected match in real-time without lag
+    // Auto-refresh scorecard every 8s (1s was hammering the backend with 4 calls/sec)
     const scorecardInterval = setInterval(() => {
       loadLiveMatchConfig();
       loadInnings();
@@ -89,7 +89,7 @@ export default function DashboardPage() {
       if (currentInningsId) {
         loadScorecard(currentInningsId);
       }
-    }, 1000);
+    }, 8000);
 
     return () => {
       clearInterval(scorecardInterval);

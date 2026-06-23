@@ -154,7 +154,7 @@ export default function ScorecardPage() {
     }
   }, [matches, innings, matchId]);
 
-  // Auto-refresh scorecard if match is live (every 1 second for real-time updates)
+  // Auto-refresh scorecard if match is live (every 8s - reduces backend load vs 1s hammering)
   useEffect(() => {
     let intervalId;
     intervalId = setInterval(() => {
@@ -166,7 +166,7 @@ export default function ScorecardPage() {
           loadScorecard(inningsId);
         }
       }
-    }, 1000);
+    }, 8000);
     return () => {
       if (intervalId) clearInterval(intervalId);
     };

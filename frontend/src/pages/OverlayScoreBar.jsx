@@ -152,20 +152,20 @@ export default function OverlayScoreBar() {
     }
   }, []);
 
-  // Poll score data for the active innings ID
+  // Poll score data for the active innings ID (every 3s for OBS overlay responsiveness)
   useEffect(() => {
     const activeInningsId = obsMode ? inningsIdParam : selectedInningsId;
     if (!activeInningsId) return;
 
     loadScore(activeInningsId);
-    const interval = setInterval(() => loadScore(activeInningsId), 1000);
+    const interval = setInterval(() => loadScore(activeInningsId), 3000);
     return () => clearInterval(interval);
   }, [selectedInningsId, obsMode, inningsIdParam]);
 
-  // Poll active slide details (runs on both OBS output and generator dashboard)
+  // Poll active slide (every 5s is plenty - slides don't change every second)
   useEffect(() => {
     loadActiveSlide();
-    const interval = setInterval(loadActiveSlide, 1000);
+    const interval = setInterval(loadActiveSlide, 5000);
     return () => clearInterval(interval);
   }, []);
 
