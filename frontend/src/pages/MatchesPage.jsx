@@ -262,7 +262,8 @@ export default function MatchesPage() {
       loadInnings();
     } catch (error) {
       console.error(error);
-      alert("Failed to complete match");
+      const msg = error?.response?.data?.error || error?.message || "Failed to complete match";
+      alert(`Cannot complete match: ${msg}\n\nMake sure both innings have been played before ending the match.`);
     }
   };
 

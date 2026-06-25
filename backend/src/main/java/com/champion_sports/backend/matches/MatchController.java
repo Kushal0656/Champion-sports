@@ -1,9 +1,13 @@
 package com.champion_sports.backend.matches;
 
 import java.util.List;
+import java.util.Map;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -65,13 +69,24 @@ public class MatchController {
     }
 
     @PostMapping("/{id}/complete")
-    public Match completeMatch(
+    public ResponseEntity<?> completeMatch(
             @PathVariable Long id
     ) {
+        try {
+            matchResultService.completeMatch(id);
+            return ResponseEntity.ok(matchService.getMatchById(id));
+        } catch (RuntimeException ex) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", ex.getMessage()));
+        }
+    }
 
-        matchResultService.completeMatch(id);
-
-        return matchService.getMatchById(id);
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<Map<String, String>> handleRuntimeException(RuntimeException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("error", ex.getMessage() != null ? ex.getMessage() : "An error occurred"));
     }
 
     @DeleteMapping("/{id}")
