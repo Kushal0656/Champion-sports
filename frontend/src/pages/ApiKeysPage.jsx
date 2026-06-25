@@ -9,9 +9,9 @@ const ALL_APIS = [
   { value: "BOOKMAKER", label: "Bookmaker Odds (BOOKMAKER)", path: "/api/v1/get/bookmaker/1" },
   { value: "ODDS", label: "Match Odds (ODDS)", path: "/api/v1/get/odds/1" },
   { value: "SESSIONS", label: "Sessions (SESSIONS)", path: "/api/v1/get/sessions/1" },
-  { value: "SESSION_RESULT", label: "Session Results (SESSION_RESULT)", path: "/api/v1/result/session_result.php?eventId=1" },
-  { value: "TV", label: "Live TV (TV)", path: "/tv.php?eventId=1" },
-  { value: "SCORE", label: "Scorecard (SCORE)", path: "/score.php?eventId=1" },
+  { value: "SESSION_RESULT", label: "Session Results (SESSION_RESULT)", path: "/api/v1/result/session_result?eventId=1" },
+  { value: "TV", label: "Live TV (TV)", path: "/api/v1/get/tv?eventId=1" },
+  { value: "SCORE", label: "Scorecard (SCORE)", path: "/api/v1/get/score?eventId=1" },
   { value: "TOSS", label: "Toss Market (TOSS)", path: "/api/v1/get/toss/1" },
   { value: "TIED", label: "Tied Market (TIED)", path: "/api/v1/get/tied/1" }
 ];

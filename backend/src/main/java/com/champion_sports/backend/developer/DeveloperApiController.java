@@ -19,6 +19,9 @@ import com.champion_sports.backend.sessions.CricketSession;
 import com.champion_sports.backend.sessions.CricketSessionRepository;
 import com.champion_sports.backend.scores.ScoringService;
 import com.champion_sports.backend.scores.ScorecardStateDTO;
+import com.champion_sports.backend.innings.Innings;
+import com.champion_sports.backend.scores.ScorecardBattingEntryDTO;
+import com.champion_sports.backend.scores.ScorecardBowlingEntryDTO;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -114,7 +117,69 @@ public class DeveloperApiController {
             return forbiddenResponse("Matches (EVENTS)");
         }
         List<Match> matches = matchRepository.findAll();
-        return ResponseEntity.ok(matches);
+        List<Map<String, Object>> formattedEvents = new ArrayList<>();
+        for (Match match : matches) {
+            Map<String, Object> event = new HashMap<>();
+            event.put("id", match.getId());
+            event.put("venue", match.getVenue());
+            event.put("matchDate", match.getMatchDate() != null ? match.getMatchDate().toString() : "");
+            event.put("status", match.getStatus() != null ? match.getStatus().name() : "SCHEDULED");
+            event.put("currentInnings", match.getCurrentInnings() != null ? match.getCurrentInnings() : 1);
+            event.put("tossDecision", match.getTossDecision() != null ? match.getTossDecision() : "");
+            event.put("resultMargin", match.getResultMargin() != null ? match.getResultMargin() : "");
+            event.put("streamUrl", match.getStreamUrl() != null ? match.getStreamUrl() : "");
+            
+            // Format teamA
+            if (match.getTeamA() != null) {
+                Map<String, Object> teamA = new HashMap<>();
+                teamA.put("id", match.getTeamA().getId());
+                teamA.put("name", match.getTeamA().getName());
+                teamA.put("shortName", match.getTeamA().getShortName());
+                event.put("teamA", teamA);
+            } else {
+                event.put("teamA", null);
+            }
+            
+            // Format teamB
+            if (match.getTeamB() != null) {
+                Map<String, Object> teamB = new HashMap<>();
+                teamB.put("id", match.getTeamB().getId());
+                teamB.put("name", match.getTeamB().getName());
+                teamB.put("shortName", match.getTeamB().getShortName());
+                event.put("teamB", teamB);
+            } else {
+                event.put("teamB", null);
+            }
+            
+            // Format tossWinner
+            if (match.getTossWinnerId() != null) {
+                Map<String, Object> tossWinner = new HashMap<>();
+                tossWinner.put("id", match.getTossWinnerId());
+                if (match.getTeamA() != null && match.getTossWinnerId().equals(match.getTeamA().getId())) {
+                    tossWinner.put("name", match.getTeamA().getName());
+                } else if (match.getTeamB() != null && match.getTossWinnerId().equals(match.getTeamB().getId())) {
+                    tossWinner.put("name", match.getTeamB().getName());
+                } else {
+                    tossWinner.put("name", "Toss Winner");
+                }
+                event.put("tossWinner", tossWinner);
+            } else {
+                event.put("tossWinner", null);
+            }
+            
+            // Format winner
+            if (match.getWinner() != null) {
+                Map<String, Object> winner = new HashMap<>();
+                winner.put("id", match.getWinner().getId());
+                winner.put("name", match.getWinner().getName());
+                event.put("winner", winner);
+            } else {
+                event.put("winner", null);
+            }
+            
+            formattedEvents.add(event);
+        }
+        return ResponseEntity.ok(formattedEvents);
     }
 
     // 1.1 List Series
@@ -326,12 +391,141 @@ public class DeveloperApiController {
         scoreDetails.put("eventId", eventId);
         scoreDetails.put("status", match.getStatus() != null ? match.getStatus().name() : "SCHEDULED");
         scoreDetails.put("venue", match.getVenue());
-        scoreDetails.put("matchDate", match.getMatchDate());
+        scoreDetails.put("matchDate", match.getMatchDate() != null ? match.getMatchDate().toString() : "");
         scoreDetails.put("teamA", match.getTeamA() != null ? match.getTeamA().getName() : "");
         scoreDetails.put("teamB", match.getTeamB() != null ? match.getTeamB().getName() : "");
-        scoreDetails.put("tossWinner", match.getTossWinner());
-        scoreDetails.put("tossDecision", match.getTossDecision());
-        scoreDetails.put("scorecard", scorecard);
+        
+        // Format toss details
+        scoreDetails.put("tossWinner", "");
+        if (match.getTossWinnerId() != null) {
+            if (match.getTeamA() != null && match.getTossWinnerId().equals(match.getTeamA().getId())) {
+                scoreDetails.put("tossWinner", match.getTeamA().getName());
+            } else if (match.getTeamB() != null && match.getTossWinnerId().equals(match.getTeamB().getId())) {
+                scoreDetails.put("tossWinner", match.getTeamB().getName());
+            }
+        }
+        scoreDetails.put("tossDecision", match.getTossDecision() != null ? match.getTossDecision() : "");
+
+        // Format scorecard.innings array exactly like the legacy PHP score.php API
+        List<Map<String, Object>> inningsList = new ArrayList<>();
+
+        if (scorecard.getInnings1() != null) {
+            Map<String, Object> inn1Map = new HashMap<>();
+            Innings inn1 = scorecard.getInnings1();
+            inn1Map.put("inningsNumber", 1);
+            inn1Map.put("runs", inn1.getRuns());
+            inn1Map.put("wickets", inn1.getWickets());
+            inn1Map.put("overs", inn1.getOvers());
+            inn1Map.put("balls", inn1.getBalls());
+            inn1Map.put("target", null);
+            
+            inn1Map.put("battingTeam", inn1.getBattingTeam() != null ? inn1.getBattingTeam().getName() : "");
+            inn1Map.put("bowlingTeam", inn1.getBowlingTeam() != null ? inn1.getBowlingTeam().getName() : "");
+
+            // Format batting stats
+            List<Map<String, Object>> battingList = new ArrayList<>();
+            if (scorecard.getTeam1BattingScorecard() != null) {
+                for (ScorecardBattingEntryDTO entry : scorecard.getTeam1BattingScorecard()) {
+                    Map<String, Object> bEntry = new HashMap<>();
+                    bEntry.put("playerName", entry.getPlayerName());
+                    bEntry.put("runs", entry.getStats().getRunsScored());
+                    bEntry.put("balls", entry.getStats().getBallsFaced());
+                    bEntry.put("fours", entry.getStats().getFours());
+                    bEntry.put("sixes", entry.getStats().getSixes());
+                    bEntry.put("isOut", entry.getStats().isDismissed());
+                    battingList.add(bEntry);
+                }
+            }
+            inn1Map.put("batting", battingList);
+
+            // Format bowling stats
+            List<Map<String, Object>> bowlingList = new ArrayList<>();
+            if (scorecard.getTeam1BowlingScorecard() != null) {
+                for (ScorecardBowlingEntryDTO entry : scorecard.getTeam1BowlingScorecard()) {
+                    Map<String, Object> boEntry = new HashMap<>();
+                    boEntry.put("playerName", entry.getPlayerName());
+                    boEntry.put("overs", entry.getStats().getOversBowled());
+                    boEntry.put("runsConceded", entry.getStats().getRunsConceded());
+                    boEntry.put("wickets", entry.getStats().getWicketsTaken());
+                    bowlingList.add(boEntry);
+                }
+            }
+            inn1Map.put("bowling", bowlingList);
+            
+            // Calculate extras for Innings 1
+            int totalBattingRuns = 0;
+            for (Map<String, Object> b : battingList) {
+                totalBattingRuns += (int) b.get("runs");
+            }
+            int extras = Math.max(0, inn1.getRuns() - totalBattingRuns);
+            inn1Map.put("extras", extras);
+
+            inningsList.add(inn1Map);
+        }
+
+        if (scorecard.getInnings2() != null) {
+            Map<String, Object> inn2Map = new HashMap<>();
+            Innings inn2 = scorecard.getInnings2();
+            inn2Map.put("inningsNumber", 2);
+            inn2Map.put("runs", inn2.getRuns());
+            inn2Map.put("wickets", inn2.getWickets());
+            inn2Map.put("overs", inn2.getOvers());
+            inn2Map.put("balls", inn2.getBalls());
+            
+            // Target for Innings 2 is Innings 1 runs + 1
+            int target = 0;
+            if (scorecard.getInnings1() != null) {
+                target = scorecard.getInnings1().getRuns() + 1;
+            }
+            inn2Map.put("target", target);
+            
+            inn2Map.put("battingTeam", inn2.getBattingTeam() != null ? inn2.getBattingTeam().getName() : "");
+            inn2Map.put("bowlingTeam", inn2.getBowlingTeam() != null ? inn2.getBowlingTeam().getName() : "");
+
+            // Format batting stats
+            List<Map<String, Object>> battingList = new ArrayList<>();
+            if (scorecard.getTeam2BattingScorecard() != null) {
+                for (ScorecardBattingEntryDTO entry : scorecard.getTeam2BattingScorecard()) {
+                    Map<String, Object> bEntry = new HashMap<>();
+                    bEntry.put("playerName", entry.getPlayerName());
+                    bEntry.put("runs", entry.getStats().getRunsScored());
+                    bEntry.put("balls", entry.getStats().getBallsFaced());
+                    bEntry.put("fours", entry.getStats().getFours());
+                    bEntry.put("sixes", entry.getStats().getSixes());
+                    bEntry.put("isOut", entry.getStats().isDismissed());
+                    battingList.add(bEntry);
+                }
+            }
+            inn2Map.put("batting", battingList);
+
+            // Format bowling stats
+            List<Map<String, Object>> bowlingList = new ArrayList<>();
+            if (scorecard.getTeam2BowlingScorecard() != null) {
+                for (ScorecardBowlingEntryDTO entry : scorecard.getTeam2BowlingScorecard()) {
+                    Map<String, Object> boEntry = new HashMap<>();
+                    boEntry.put("playerName", entry.getPlayerName());
+                    boEntry.put("overs", entry.getStats().getOversBowled());
+                    boEntry.put("runsConceded", entry.getStats().getRunsConceded());
+                    boEntry.put("wickets", entry.getStats().getWicketsTaken());
+                    bowlingList.add(boEntry);
+                }
+            }
+            inn2Map.put("bowling", bowlingList);
+            
+            // Calculate extras for Innings 2
+            int totalBattingRuns = 0;
+            for (Map<String, Object> b : battingList) {
+                totalBattingRuns += (int) b.get("runs");
+            }
+            int extras = Math.max(0, inn2.getRuns() - totalBattingRuns);
+            inn2Map.put("extras", extras);
+
+            inningsList.add(inn2Map);
+        }
+
+        Map<String, Object> scorecardContainer = new HashMap<>();
+        scorecardContainer.put("innings", inningsList);
+        scoreDetails.put("scorecard", scorecardContainer);
 
         return ResponseEntity.ok(scoreDetails);
     }
