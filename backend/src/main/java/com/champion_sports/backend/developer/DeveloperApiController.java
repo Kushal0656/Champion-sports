@@ -101,12 +101,23 @@ public class DeveloperApiController {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 
-    private Long resolveEventId(Long pathId, Long eventId, Long event_id, Long matchId, Long id) {
-        if (pathId != null) return pathId;
-        if (eventId != null) return eventId;
-        if (event_id != null) return event_id;
-        if (matchId != null) return matchId;
-        return id;
+    private Long resolveEventId(String pathId, String eventId, String event_id, String matchId, String id) {
+        String rawId = null;
+        if (pathId != null && !pathId.isEmpty()) rawId = pathId;
+        else if (eventId != null && !eventId.isEmpty()) rawId = eventId;
+        else if (event_id != null && !event_id.isEmpty()) rawId = event_id;
+        else if (matchId != null && !matchId.isEmpty()) rawId = matchId;
+        else if (id != null && !id.isEmpty()) rawId = id;
+
+        if (rawId == null || "null".equalsIgnoreCase(rawId) || "undefined".equalsIgnoreCase(rawId)) {
+            return null;
+        }
+
+        try {
+            return Long.parseLong(rawId);
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     // 1. List Matches
@@ -213,10 +224,10 @@ public class DeveloperApiController {
     @GetMapping({"/api/v1/get/bookmaker/{eventId}", "/api/v1/get/bookmaker"})
     public ResponseEntity<?> getBookmaker(
             HttpServletRequest request,
-            @PathVariable(required = false) Long eventId,
-            @RequestParam(required = false) Long event_id,
-            @RequestParam(required = false) Long matchId,
-            @RequestParam(required = false) Long id,
+            @PathVariable(required = false) String eventId,
+            @RequestParam(required = false) String event_id,
+            @RequestParam(required = false) String matchId,
+            @RequestParam(required = false) String id,
             @RequestParam(required = false) String clientId,
             @RequestParam(required = false) String token
     ) {
@@ -244,10 +255,10 @@ public class DeveloperApiController {
     @GetMapping({"/api/v1/get/odds/{eventId}", "/api/v1/get/odds"})
     public ResponseEntity<?> getOdds(
             HttpServletRequest request,
-            @PathVariable(required = false) Long eventId,
-            @RequestParam(required = false) Long event_id,
-            @RequestParam(required = false) Long matchId,
-            @RequestParam(required = false) Long id,
+            @PathVariable(required = false) String eventId,
+            @RequestParam(required = false) String event_id,
+            @RequestParam(required = false) String matchId,
+            @RequestParam(required = false) String id,
             @RequestParam(required = false) String clientId,
             @RequestParam(required = false) String token
     ) {
@@ -275,10 +286,10 @@ public class DeveloperApiController {
     @GetMapping({"/api/v1/get/sessions/{eventId}", "/api/v1/get/sessions"})
     public ResponseEntity<?> getSessions(
             HttpServletRequest request,
-            @PathVariable(required = false) Long eventId,
-            @RequestParam(required = false) Long event_id,
-            @RequestParam(required = false) Long matchId,
-            @RequestParam(required = false) Long id,
+            @PathVariable(required = false) String eventId,
+            @RequestParam(required = false) String event_id,
+            @RequestParam(required = false) String matchId,
+            @RequestParam(required = false) String id,
             @RequestParam(required = false) String clientId,
             @RequestParam(required = false) String token
     ) {
@@ -309,10 +320,10 @@ public class DeveloperApiController {
     @GetMapping({"/api/v1/result/session_result.php", "/api/v1/result/session_result"})
     public ResponseEntity<?> getSessionResult(
             HttpServletRequest request,
-            @RequestParam(required = false) Long eventId,
-            @RequestParam(required = false) Long event_id,
-            @RequestParam(required = false) Long matchId,
-            @RequestParam(required = false) Long id,
+            @RequestParam(required = false) String eventId,
+            @RequestParam(required = false) String event_id,
+            @RequestParam(required = false) String matchId,
+            @RequestParam(required = false) String id,
             @RequestParam(required = false) String clientId,
             @RequestParam(required = false) String token
     ) {
@@ -347,10 +358,10 @@ public class DeveloperApiController {
     @GetMapping({"/tv.php", "/api/v1/get/tv"})
     public ResponseEntity<?> getTv(
             HttpServletRequest request,
-            @RequestParam(required = false) Long eventId,
-            @RequestParam(required = false) Long event_id,
-            @RequestParam(required = false) Long matchId,
-            @RequestParam(required = false) Long id,
+            @RequestParam(required = false) String eventId,
+            @RequestParam(required = false) String event_id,
+            @RequestParam(required = false) String matchId,
+            @RequestParam(required = false) String id,
             @RequestParam(required = false) String clientId,
             @RequestParam(required = false) String token,
             @RequestParam(required = false) String marketId
@@ -387,10 +398,10 @@ public class DeveloperApiController {
     @GetMapping({"/score.php", "/api/v1/get/score"})
     public ResponseEntity<?> getScore(
             HttpServletRequest request,
-            @RequestParam(required = false) Long eventId,
-            @RequestParam(required = false) Long event_id,
-            @RequestParam(required = false) Long matchId,
-            @RequestParam(required = false) Long id,
+            @RequestParam(required = false) String eventId,
+            @RequestParam(required = false) String event_id,
+            @RequestParam(required = false) String matchId,
+            @RequestParam(required = false) String id,
             @RequestParam(required = false) String clientId,
             @RequestParam(required = false) String token
     ) {
@@ -560,10 +571,10 @@ public class DeveloperApiController {
     @GetMapping({"/api/v1/get/toss/{eventId}", "/api/v1/get/toss"})
     public ResponseEntity<?> getToss(
             HttpServletRequest request,
-            @PathVariable(required = false) Long eventId,
-            @RequestParam(required = false) Long event_id,
-            @RequestParam(required = false) Long matchId,
-            @RequestParam(required = false) Long id,
+            @PathVariable(required = false) String eventId,
+            @RequestParam(required = false) String event_id,
+            @RequestParam(required = false) String matchId,
+            @RequestParam(required = false) String id,
             @RequestParam(required = false) String clientId,
             @RequestParam(required = false) String token
     ) {
@@ -598,10 +609,10 @@ public class DeveloperApiController {
     @GetMapping({"/api/v1/get/tied/{eventId}", "/api/v1/get/tied"})
     public ResponseEntity<?> getTied(
             HttpServletRequest request,
-            @PathVariable(required = false) Long eventId,
-            @RequestParam(required = false) Long event_id,
-            @RequestParam(required = false) Long matchId,
-            @RequestParam(required = false) Long id,
+            @PathVariable(required = false) String eventId,
+            @RequestParam(required = false) String event_id,
+            @RequestParam(required = false) String matchId,
+            @RequestParam(required = false) String id,
             @RequestParam(required = false) String clientId,
             @RequestParam(required = false) String token
     ) {
