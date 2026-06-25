@@ -33,3 +33,8 @@ export const removePlayerTeam = async (playerId) => {
   const response = await axiosClient.put(`/players/${playerId}/remove-team`);
   return response.data;
 };
+
+export const deletePlayer = async (id) => {
+  const response = await axiosClient.delete(`/players/${id}`);
+  return response.data;
+};

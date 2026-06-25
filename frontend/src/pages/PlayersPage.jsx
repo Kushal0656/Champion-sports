@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
-import { getPlayers, createPlayer, uploadPlayerPhoto } from "../api/playerApi";
+import { getPlayers, createPlayer, uploadPlayerPhoto, deletePlayer } from "../api/playerApi";
 import { getFullUrl } from "../utils/config";
 
 export default function PlayersPage() {
@@ -198,10 +198,30 @@ export default function PlayersPage() {
                   )}
                 </div>
                 <div style={{ borderTop: "1px solid var(--border-light)", paddingTop: "0.75rem", display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "0.5rem" }}>
-                  <span style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>Current Team</span>
-                  <span style={{ fontSize: "0.9rem", fontWeight: "600", color: "var(--text-secondary)" }}>
-                    {player.team?.name || "Free Agent"}
-                  </span>
+                  <div style={{ display: "flex", flexDirection: "column" }}>
+                    <span style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>Current Team</span>
+                    <span style={{ fontSize: "0.9rem", fontWeight: "600", color: "var(--text-secondary)" }}>
+                      {player.team?.name || "Free Agent"}
+                    </span>
+                  </div>
+                  <button 
+                    className="btn btn-secondary" 
+                    style={{ padding: "0.3rem 0.6rem", fontSize: "0.8rem", color: "#ef4444", border: "1px solid rgba(239, 68, 68, 0.2)", backgroundColor: "transparent" }}
+                    onClick={async () => {
+                      if (window.confirm(`Are you sure you want to delete ${player.name}?`)) {
+                        try {
+                          await deletePlayer(player.id);
+                          loadPlayers();
+                          alert("Player deleted successfully");
+                        } catch (error) {
+                          console.error(error);
+                          alert("Failed to delete player");
+                        }
+                      }
+                    }}
+                  >
+                    🗑️ Delete
+                  </button>
                 </div>
               </div>
             ))}

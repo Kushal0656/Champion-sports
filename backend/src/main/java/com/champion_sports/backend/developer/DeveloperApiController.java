@@ -101,6 +101,14 @@ public class DeveloperApiController {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 
+    private Long resolveEventId(Long pathId, Long eventId, Long event_id, Long matchId, Long id) {
+        if (pathId != null) return pathId;
+        if (eventId != null) return eventId;
+        if (event_id != null) return event_id;
+        if (matchId != null) return matchId;
+        return id;
+    }
+
     // 1. List Matches
     @GetMapping({"/api/v1/get/events/{sportId}", "/api/v1/get/events"})
     public ResponseEntity<?> getEvents(
@@ -206,6 +214,8 @@ public class DeveloperApiController {
     public ResponseEntity<?> getBookmaker(
             HttpServletRequest request,
             @PathVariable(required = false) Long eventId,
+            @RequestParam(required = false) Long event_id,
+            @RequestParam(required = false) Long matchId,
             @RequestParam(required = false) Long id,
             @RequestParam(required = false) String clientId,
             @RequestParam(required = false) String token
@@ -217,7 +227,7 @@ public class DeveloperApiController {
         if (!hasPermission(key, "BOOKMAKER")) {
             return forbiddenResponse("Bookmaker Odds (BOOKMAKER)");
         }
-        Long targetMatchId = eventId != null ? eventId : id;
+        Long targetMatchId = resolveEventId(eventId, null, event_id, matchId, id);
         if (targetMatchId == null) {
             return ResponseEntity.badRequest().body(Map.of("error", "eventId or id parameter is required"));
         }
@@ -235,6 +245,8 @@ public class DeveloperApiController {
     public ResponseEntity<?> getOdds(
             HttpServletRequest request,
             @PathVariable(required = false) Long eventId,
+            @RequestParam(required = false) Long event_id,
+            @RequestParam(required = false) Long matchId,
             @RequestParam(required = false) Long id,
             @RequestParam(required = false) String clientId,
             @RequestParam(required = false) String token
@@ -246,7 +258,7 @@ public class DeveloperApiController {
         if (!hasPermission(key, "ODDS")) {
             return forbiddenResponse("Match Odds (ODDS)");
         }
-        Long targetMatchId = eventId != null ? eventId : id;
+        Long targetMatchId = resolveEventId(eventId, null, event_id, matchId, id);
         if (targetMatchId == null) {
             return ResponseEntity.badRequest().body(Map.of("error", "eventId or id parameter is required"));
         }
@@ -264,6 +276,8 @@ public class DeveloperApiController {
     public ResponseEntity<?> getSessions(
             HttpServletRequest request,
             @PathVariable(required = false) Long eventId,
+            @RequestParam(required = false) Long event_id,
+            @RequestParam(required = false) Long matchId,
             @RequestParam(required = false) Long id,
             @RequestParam(required = false) String clientId,
             @RequestParam(required = false) String token
@@ -275,7 +289,7 @@ public class DeveloperApiController {
         if (!hasPermission(key, "SESSIONS")) {
             return forbiddenResponse("Sessions (SESSIONS)");
         }
-        Long targetMatchId = eventId != null ? eventId : id;
+        Long targetMatchId = resolveEventId(eventId, null, event_id, matchId, id);
         if (targetMatchId == null) {
             return ResponseEntity.badRequest().body(Map.of("error", "eventId or id parameter is required"));
         }
@@ -296,6 +310,9 @@ public class DeveloperApiController {
     public ResponseEntity<?> getSessionResult(
             HttpServletRequest request,
             @RequestParam(required = false) Long eventId,
+            @RequestParam(required = false) Long event_id,
+            @RequestParam(required = false) Long matchId,
+            @RequestParam(required = false) Long id,
             @RequestParam(required = false) String clientId,
             @RequestParam(required = false) String token
     ) {
@@ -306,10 +323,11 @@ public class DeveloperApiController {
         if (!hasPermission(key, "SESSION_RESULT")) {
             return forbiddenResponse("Session Result (SESSION_RESULT)");
         }
-        if (eventId == null) {
+        Long targetMatchId = resolveEventId(null, eventId, event_id, matchId, id);
+        if (targetMatchId == null) {
             return ResponseEntity.badRequest().body(Map.of("error", "eventId query parameter is required"));
         }
-        List<CricketSession> sessions = cricketSessionRepository.findByMatchId(eventId);
+        List<CricketSession> sessions = cricketSessionRepository.findByMatchId(targetMatchId);
         List<Map<String, Object>> declaredResults = new ArrayList<>();
         for (CricketSession s : sessions) {
             if ("DECLARED".equalsIgnoreCase(s.getStatus())) {
@@ -330,6 +348,9 @@ public class DeveloperApiController {
     public ResponseEntity<?> getTv(
             HttpServletRequest request,
             @RequestParam(required = false) Long eventId,
+            @RequestParam(required = false) Long event_id,
+            @RequestParam(required = false) Long matchId,
+            @RequestParam(required = false) Long id,
             @RequestParam(required = false) String clientId,
             @RequestParam(required = false) String token,
             @RequestParam(required = false) String marketId
@@ -341,18 +362,19 @@ public class DeveloperApiController {
         if (!hasPermission(key, "TV")) {
             return forbiddenResponse("Live TV (TV)");
         }
-        if (eventId == null) {
+        Long targetMatchId = resolveEventId(null, eventId, event_id, matchId, id);
+        if (targetMatchId == null) {
             return ResponseEntity.badRequest().body(Map.of("error", "eventId query parameter is required"));
         }
 
-        Optional<Match> matchOpt = matchRepository.findById(eventId);
+        Optional<Match> matchOpt = matchRepository.findById(targetMatchId);
         if (matchOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
         Match match = matchOpt.get();
 
         Map<String, Object> tvDetails = new HashMap<>();
-        tvDetails.put("eventId", eventId);
+        tvDetails.put("eventId", targetMatchId);
         tvDetails.put("marketId", marketId != null ? marketId : "1.10098734");
         tvDetails.put("streamUrl", match.getStreamUrl() != null ? match.getStreamUrl() : "");
         tvDetails.put("status", match.getStatus() != null ? match.getStatus().name() : "SCHEDULED");
@@ -366,6 +388,9 @@ public class DeveloperApiController {
     public ResponseEntity<?> getScore(
             HttpServletRequest request,
             @RequestParam(required = false) Long eventId,
+            @RequestParam(required = false) Long event_id,
+            @RequestParam(required = false) Long matchId,
+            @RequestParam(required = false) Long id,
             @RequestParam(required = false) String clientId,
             @RequestParam(required = false) String token
     ) {
@@ -376,19 +401,20 @@ public class DeveloperApiController {
         if (!hasPermission(key, "SCORE")) {
             return forbiddenResponse("Scorecard (SCORE)");
         }
-        if (eventId == null) {
+        Long targetMatchId = resolveEventId(null, eventId, event_id, matchId, id);
+        if (targetMatchId == null) {
             return ResponseEntity.badRequest().body(Map.of("error", "eventId query parameter is required"));
         }
 
-        Optional<Match> matchOpt = matchRepository.findById(eventId);
+        Optional<Match> matchOpt = matchRepository.findById(targetMatchId);
         if (matchOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
         Match match = matchOpt.get();
-        ScorecardStateDTO scorecard = scoringService.getScorecardState(eventId);
+        ScorecardStateDTO scorecard = scoringService.getScorecardState(targetMatchId);
 
         Map<String, Object> scoreDetails = new HashMap<>();
-        scoreDetails.put("eventId", eventId);
+        scoreDetails.put("eventId", targetMatchId);
         scoreDetails.put("status", match.getStatus() != null ? match.getStatus().name() : "SCHEDULED");
         scoreDetails.put("venue", match.getVenue());
         scoreDetails.put("matchDate", match.getMatchDate() != null ? match.getMatchDate().toString() : "");
@@ -535,6 +561,8 @@ public class DeveloperApiController {
     public ResponseEntity<?> getToss(
             HttpServletRequest request,
             @PathVariable(required = false) Long eventId,
+            @RequestParam(required = false) Long event_id,
+            @RequestParam(required = false) Long matchId,
             @RequestParam(required = false) Long id,
             @RequestParam(required = false) String clientId,
             @RequestParam(required = false) String token
@@ -546,7 +574,7 @@ public class DeveloperApiController {
         if (!hasPermission(key, "TOSS")) {
             return forbiddenResponse("Toss Market (TOSS)");
         }
-        Long targetMatchId = eventId != null ? eventId : id;
+        Long targetMatchId = resolveEventId(eventId, null, event_id, matchId, id);
         if (targetMatchId == null) {
             return ResponseEntity.badRequest().body(Map.of("error", "eventId or id parameter is required"));
         }
@@ -571,6 +599,8 @@ public class DeveloperApiController {
     public ResponseEntity<?> getTied(
             HttpServletRequest request,
             @PathVariable(required = false) Long eventId,
+            @RequestParam(required = false) Long event_id,
+            @RequestParam(required = false) Long matchId,
             @RequestParam(required = false) Long id,
             @RequestParam(required = false) String clientId,
             @RequestParam(required = false) String token
@@ -582,7 +612,7 @@ public class DeveloperApiController {
         if (!hasPermission(key, "TIED")) {
             return forbiddenResponse("Tied Market (TIED)");
         }
-        Long targetMatchId = eventId != null ? eventId : id;
+        Long targetMatchId = resolveEventId(eventId, null, event_id, matchId, id);
         if (targetMatchId == null) {
             return ResponseEntity.badRequest().body(Map.of("error", "eventId or id parameter is required"));
         }

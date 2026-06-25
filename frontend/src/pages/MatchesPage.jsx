@@ -5,6 +5,7 @@ import {
   createMatch,
   completeMatch,
   updateMatch,
+  deleteMatch,
 } from "../api/matchApi";
 import { getTeams } from "../api/teamApi";
 import { isAdminLoggedIn } from "../utils/auth";
@@ -551,7 +552,7 @@ export default function MatchesPage() {
                     )}
                   </div>
                   
-                  <div style={{ display: "flex", gap: "0.5rem" }}>
+                  <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
                     {match.status === "COMPLETED" && (
                       <a
                         href={`/scorecard?matchId=${match.id}`}
@@ -578,6 +579,26 @@ export default function MatchesPage() {
                         onClick={() => handleCompleteMatch(match.id)}
                       >
                         🏁 End Match
+                      </button>
+                    )}
+                    {loggedIn && (
+                      <button
+                        className="btn btn-secondary"
+                        style={{ padding: "0.5rem 1rem", fontSize: "0.85rem", color: "#ef4444", border: "1px solid rgba(239, 68, 68, 0.2)", backgroundColor: "transparent" }}
+                        onClick={async () => {
+                          if (window.confirm("Are you sure you want to delete this match? This will delete all associated innings and balls.")) {
+                            try {
+                              await deleteMatch(match.id);
+                              alert("Match deleted successfully");
+                              loadMatches();
+                            } catch (error) {
+                              console.error(error);
+                              alert("Failed to delete match");
+                            }
+                          }
+                        }}
+                      >
+                        🗑️ Delete
                       </button>
                     )}
                   </div>
