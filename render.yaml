@@ -1,7 +1,6 @@
 databases:
   - name: champion-sports-db
     databaseName: champion_sports
-    databaseUser: postgres
     plan: free
 
 services:
