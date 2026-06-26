@@ -105,7 +105,7 @@ export default function App() {
         />
         <Route
           path="/api-keys"
-          element={<AdminRoute><ApiKeysPage /></AdminRoute>}
+          element={<ApiKeysPage />}
         />
       </Routes>
     </BrowserRouter>

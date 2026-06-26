@@ -26,6 +26,7 @@ export default function Sidebar() {
         { path: "/matches", label: "📅 Matches", icon: "🏏" },
         { path: "/scorecard", label: "📋 Scorecard", icon: "📝" },
         { path: "/points-table", label: "📊 Points Table", icon: "📈" },
+        { path: "/api-keys", label: "🔑 API Keys", icon: "🔑" },
         { path: "/login", label: "🔑 Admin Login", icon: "🔒" }
       ];
 
