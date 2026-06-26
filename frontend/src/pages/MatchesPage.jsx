@@ -166,19 +166,7 @@ export default function MatchesPage() {
     try {
       const data = await getMatches();
       setMatches(data);
-
-      const oddsMap = {};
-      await Promise.all(
-        data.map(async (m) => {
-          try {
-            const response = await axiosClient.get(`/admin/match-odds/${m.id}`);
-            oddsMap[m.id] = response.data;
-          } catch (e) {
-            // Ignore if no odds set yet or API error
-          }
-        })
-      );
-      setMatchOddsData(oddsMap);
+      // NOTE: odds are loaded lazily when a match odds panel is opened
     } catch (error) {
       console.error("Error loading matches", error);
     }

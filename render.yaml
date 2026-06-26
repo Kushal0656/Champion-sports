@@ -1,3 +1,9 @@
+databases:
+  - name: champion-sports-db
+    databaseName: champion_sports
+    user: postgres
+    plan: free
+
 services:
   # 1. Backend Web Service (Spring Boot Docker)
   - type: web
@@ -6,12 +12,26 @@ services:
     rootDir: backend
     plan: free
     envVars:
-      - key: SPRING_DATASOURCE_URL
-        value: jdbc:postgresql://ep-shiny-bonus-attz75v3.c-9.us-east-1.aws.neon.tech/neondb?sslmode=require
+      - key: DB_HOST
+        fromDatabase:
+          name: champion-sports-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: champion-sports-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: champion-sports-db
+          property: database
       - key: SPRING_DATASOURCE_USERNAME
-        value: neondb_owner
+        fromDatabase:
+          name: champion-sports-db
+          property: user
       - key: SPRING_DATASOURCE_PASSWORD
-        value: npg_dcJAOqzfL26u
+        fromDatabase:
+          name: champion-sports-db
+          property: password
       - key: PORT
         value: 8080
       - key: ML_SERVICE_URL
