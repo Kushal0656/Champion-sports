@@ -66,3 +66,11 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
+
+  # 4. PHP Odds Generator & Admin App (PHP Apache Docker)
+  - type: web
+    name: champion-sports-php
+    runtime: docker
+    rootDir: champion-sports-php
+    plan: free
+

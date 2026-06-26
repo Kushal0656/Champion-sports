@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
-import { getTeams, createTeam, uploadTeamLogo, updateTeam } from "../api/teamApi";
+import { getTeams, createTeam, uploadTeamLogo, updateTeam, deleteTeam } from "../api/teamApi";
 import { getPlayers, assignPlayerTeam, removePlayerTeam } from "../api/playerApi";
 import { getApiBaseUrl, getFullUrl } from "../utils/config";
 import { isAdminLoggedIn } from "../utils/auth";
@@ -84,6 +84,12 @@ export default function TeamsPage() {
   };
 
   const handleAssignPlayer = async (player) => {
+    if (player.team && player.team.name) {
+      const confirmMove = window.confirm(`player already in "${player.team.name}" and do you want to add in this team`);
+      if (!confirmMove) {
+        return;
+      }
+    }
     try {
       await assignPlayerTeam(player.id, selectedTeam.id);
       alert("Player added to team successfully!");
@@ -165,6 +171,21 @@ export default function TeamsPage() {
       alert("Failed to update team leader");
     } finally {
       setSavingTeamLeader(false);
+    }
+  };
+
+  const handleDeleteTeam = async (teamId) => {
+    if (!window.confirm("Are you sure you want to delete this team? All players in this team will be unassigned.")) {
+      return;
+    }
+    try {
+      await deleteTeam(teamId);
+      alert("Team deleted successfully!");
+      setSelectedTeam(null);
+      loadTeams();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete team");
     }
   };
 
@@ -383,8 +404,19 @@ export default function TeamsPage() {
                   </label>
                 )}
               </div>
-              <div>
-                <h2 style={{ margin: 0, fontSize: "1.75rem" }}>{selectedTeam.name}</h2>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", gap: "1rem" }}>
+                  <h2 style={{ margin: 0, fontSize: "1.75rem" }}>{selectedTeam.name}</h2>
+                  {loggedIn && (
+                    <button
+                      className="btn btn-secondary"
+                      style={{ padding: "0.4rem 0.8rem", fontSize: "0.85rem", color: "#ef4444", borderColor: "#fecaca", cursor: "pointer" }}
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteTeam(selectedTeam.id); }}
+                    >
+                      🗑️ Delete Team
+                    </button>
+                  )}
+                </div>
                 <p style={{ color: "var(--text-secondary)", margin: "0.25rem 0 0 0" }}>
                   {loggedIn ? "Team Management & Roster" : "Team Squad & Details"}
                 </p>

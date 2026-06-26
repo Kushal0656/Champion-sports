@@ -1,0 +1,48 @@
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Route React Frontend Admin API endpoints
+RewriteRule ^api/overlay-slides/match/([0-9]+)/?$ api/overlay-slides.php?matchId=$1 [QSA,L]
+RewriteRule ^api/overlay-slides/active/?$ api/overlay-slides.php?active=1 [QSA,L]
+RewriteRule ^api/overlay-slides/deactivate/?$ api/overlay-slides.php?action=deactivate-all [QSA,L]
+RewriteRule ^api/overlay-slides/([0-9]+)/activate/?$ api/overlay-slides.php?id=$1&action=activate [QSA,L]
+RewriteRule ^api/overlay-slides/([0-9]+)/layout/?$ api/overlay-slides.php?id=$1&action=layout [QSA,L]
+RewriteRule ^api/overlay-slides/([0-9]+)/canvas-layout/?$ api/overlay-slides.php?id=$1&action=canvas-layout [QSA,L]
+RewriteRule ^api/overlay-slides/([0-9]+)/title/?$ api/overlay-slides.php?id=$1&action=title [QSA,L]
+RewriteRule ^api/matches/([0-9]+)/complete/?$ api/matches.php?id=$1&action=complete [QSA,L]
+
+# Player & Team specific routes
+RewriteRule ^api/players/([0-9]+)/photo/?$ api/players.php?id=$1&action=photo [QSA,L]
+RewriteRule ^api/players/([0-9]+)/assign-team/([0-9]+)/?$ api/players.php?id=$1&action=assign-team&teamId=$2 [QSA,L]
+RewriteRule ^api/players/([0-9]+)/remove-team/?$ api/players.php?id=$1&action=remove-team [QSA,L]
+RewriteRule ^api/teams/([0-9]+)/logo/?$ api/teams.php?id=$1&action=logo [QSA,L]
+
+# Content API key routing
+RewriteRule ^api/content/key/([^/]+)/?$ api/content.php?key=$1 [QSA,L]
+
+# Developer Keys API Routing
+RewriteRule ^api/admin/developer-keys/([0-9]+)/toggle/?$ api/developer-keys.php?action=toggle&id=$1 [QSA,L]
+RewriteRule ^api/admin/developer-keys/([0-9]+)/permissions/?$ api/developer-keys.php?id=$1 [QSA,L]
+RewriteRule ^api/admin/developer-keys/([0-9]+)/?$ api/developer-keys.php?id=$1 [QSA,L]
+RewriteRule ^api/admin/developer-keys/?$ api/developer-keys.php [QSA,L]
+
+# General resource API routing
+RewriteRule ^api/([a-zA-Z0-9\-]+)/([0-9]+)/?$ api/$1.php?id=$2 [QSA,L]
+RewriteRule ^api/([a-zA-Z0-9\-]+)/?$ api/$1.php [QSA,L]
+
+# Route developer endpoints
+RewriteRule ^api/v1/get/events(?:/([0-9]+))?$ api/developer/events.php?sportId=$1 [QSA,L]
+RewriteRule ^api/v1/get/series(?:/([0-9]+))?$ api/developer/series.php?sportId=$1 [QSA,L]
+RewriteRule ^api/v1/get/bookmaker(?:/([0-9]+))?$ api/developer/bookmaker.php?eventId=$1 [QSA,L]
+RewriteRule ^api/v1/get/odds(?:/([0-9]+))?$ api/developer/odds.php?eventId=$1 [QSA,L]
+RewriteRule ^api/v1/get/sessions(?:/([0-9]+))?$ api/developer/sessions.php?eventId=$1 [QSA,L]
+RewriteRule ^api/v1/get/toss(?:/([0-9]+))?$ api/developer/toss.php?eventId=$1 [QSA,L]
+RewriteRule ^api/v1/get/tied(?:/([0-9]+))?$ api/developer/tied.php?eventId=$1 [QSA,L]
+RewriteRule ^api/v1/result/session_result(?:\.php)?$ api/developer/session_result.php [QSA,L]
+RewriteRule ^tv(?:\.php)?$ api/developer/tv.php [QSA,L]
+RewriteRule ^score(?:\.php)?$ api/developer/score.php [QSA,L]
+
+# Fallback to index.html for React Router client-side routing
+RewriteRule ^(.*)$ index.html [QSA,L]

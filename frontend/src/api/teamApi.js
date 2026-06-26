@@ -30,3 +30,8 @@ export const uploadTeamLogo = async (id, file) => {
   });
   return response.data;
 };
+
+export const deleteTeam = async (id) => {
+  const response = await axiosClient.delete(`/teams/${id}`);
+  return response.data;
+};

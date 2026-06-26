@@ -2,9 +2,19 @@ export const getApiBaseUrl = () => {
   if (import.meta.env.VITE_API_BASE_URL) {
     return import.meta.env.VITE_API_BASE_URL;
   }
-  return window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-    ? "http://localhost:8080"
-    : window.location.origin;
+  if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+    if (window.location.port === "5173") {
+      return "http://localhost:8080";
+    }
+  }
+  let path = window.location.pathname;
+  if (path.endsWith("/index.html") || path.endsWith("/index.php")) {
+    path = path.substring(0, path.lastIndexOf("/"));
+  }
+  if (path.endsWith("/")) {
+    path = path.substring(0, path.length - 1);
+  }
+  return window.location.origin + path;
 };
 
 export const getWsBaseUrl = () => {
