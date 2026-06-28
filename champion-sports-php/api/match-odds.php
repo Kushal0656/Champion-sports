@@ -124,18 +124,22 @@ if ($method === 'GET') {
                 'current_bowler_economy' => (float)$bowler_economy
             ];
 
-            // Try to fetch prediction from FastAPI ML service on Render
-            $ml_service_url = defined('ML_SERVICE_URL') ? ML_SERVICE_URL : 'https://champion-sports-ml.onrender.com';
-            $ml_url = rtrim($ml_service_url, '/') . '/predict';
-            $ch = curl_init($ml_url);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($features));
-            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-            curl_setopt($ch, CURLOPT_TIMEOUT_MS, 300); // short timeout to fail fast
-            $ml_res = curl_exec($ch);
-            $ml_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            curl_close($ch);
+            // Try to fetch prediction from FastAPI ML service on Render if configured
+            $ml_service_url = defined('ML_SERVICE_URL') ? ML_SERVICE_URL : '';
+            $ml_res = null;
+            $ml_status = 0;
+            if (!empty($ml_service_url)) {
+                $ml_url = rtrim($ml_service_url, '/') . '/predict';
+                $ch = curl_init($ml_url);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($features));
+                curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+                curl_setopt($ch, CURLOPT_TIMEOUT_MS, 300); // short timeout to fail fast
+                $ml_res = curl_exec($ch);
+                $ml_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                curl_close($ch);
+            }
 
             $prob_batting = null;
             if ($ml_status === 200 && $ml_res) {

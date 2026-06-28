@@ -59,8 +59,8 @@ define('SITE_URL', getenv('SITE_URL') ?: (isset($_SERVER['HTTP_HOST']) ? getDyna
 define('UPLOAD_DIR', __DIR__ . '/../uploads/');
 define('UPLOAD_URL', SITE_URL . '/uploads/');
 
-// Machine Learning Service URL on Render
-define('ML_SERVICE_URL', 'https://champion-sports-ml.onrender.com');
+// Machine Learning Service URL (set to empty to use local mathematical formulas directly)
+define('ML_SERVICE_URL', '');
 
 // =============================================
 // PDO DATABASE CONNECTION
