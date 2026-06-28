@@ -3,17 +3,57 @@
 // DATABASE CONFIGURATION
 // Change these values to match your MySQL setup
 // =============================================
-define('DB_HOST', getenv('DB_HOST') ?: '127.0.0.1');
-define('DB_NAME', getenv('DB_NAME') ?: 'champion_sports');
-define('DB_USER', getenv('DB_USER') ?: 'root');
-define('DB_PASS', getenv('DB_PASS') !== false ? getenv('DB_PASS') : '');
+function getWPConfig(): ?array {
+    $paths = [
+        __DIR__ . '/../../wp-config.php',
+        __DIR__ . '/../../../wp-config.php'
+    ];
+    foreach ($paths as $path) {
+        if (file_exists($path)) {
+            $content = file_get_contents($path);
+            $config = [];
+            if (preg_match("/define\(\s*['\"]DB_HOST['\"]\s*,\s*['\"]([^'\"]+)['\"]\s*\)/i", $content, $matches)) {
+                $config['host'] = $matches[1];
+            }
+            if (preg_match("/define\(\s*['\"]DB_NAME['\"]\s*,\s*['\"]([^'\"]+)['\"]\s*\)/i", $content, $matches)) {
+                $config['name'] = $matches[1];
+            }
+            if (preg_match("/define\(\s*['\"]DB_USER['\"]\s*,\s*['\"]([^'\"]+)['\"]\s*\)/i", $content, $matches)) {
+                $config['user'] = $matches[1];
+            }
+            if (preg_match("/define\(\s*['\"]DB_PASSWORD['\"]\s*,\s*['\"]([^'\"]+)['\"]\s*\)/i", $content, $matches)) {
+                $config['pass'] = $matches[1];
+            }
+            return $config;
+        }
+    }
+    return null;
+}
+
+function getDynamicSiteUrl(): string {
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || ($_SERVER['SERVER_PORT'] ?? '') == 443) ? "https://" : "http://";
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost:8081';
+    $uri = $_SERVER['REQUEST_URI'] ?? '';
+    $path = '/champion-sports-php';
+    if (strpos($uri, $path) === 0 || strpos($_SERVER['SCRIPT_NAME'] ?? '', $path) === 0) {
+        return $protocol . $host . $path;
+    }
+    return $protocol . $host;
+}
+
+$wpConfig = getWPConfig();
+
+define('DB_HOST', getenv('DB_HOST') ?: ($wpConfig['host'] ?? '127.0.0.1'));
+define('DB_NAME', getenv('DB_NAME') ?: ($wpConfig['name'] ?? 'champion_sports'));
+define('DB_USER', getenv('DB_USER') ?: ($wpConfig['user'] ?? 'root'));
+define('DB_PASS', getenv('DB_PASS') !== false ? getenv('DB_PASS') : ($wpConfig['pass'] ?? ''));
 define('DB_CHARSET', 'utf8mb4');
 
 // Admin password (change this!)
 define('ADMIN_PASSWORD', 'Admin@1234');
 
 // Site URL (no trailing slash)
-define('SITE_URL', getenv('SITE_URL') ?: 'http://localhost:8081');
+define('SITE_URL', getenv('SITE_URL') ?: (isset($_SERVER['HTTP_HOST']) ? getDynamicSiteUrl() : 'http://localhost:8081'));
 
 // Upload directory
 define('UPLOAD_DIR', __DIR__ . '/../uploads/');
@@ -36,6 +76,19 @@ function getDB(): PDO {
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                 PDO::ATTR_EMULATE_PREPARES   => false,
             ]);
+
+            // Auto-install: check if 'teams' table exists, if not run schema.sql
+            try {
+                $pdo->query("SELECT 1 FROM teams LIMIT 1");
+            } catch (Exception $e) {
+                $schemaFile = __DIR__ . '/../schema.sql';
+                if (file_exists($schemaFile)) {
+                    $sql = file_get_contents($schemaFile);
+                    $sql = preg_replace('/CREATE DATABASE.*?;/is', '', $sql);
+                    $sql = preg_replace('/USE\s+[a-zA-Z0-9_]+;/i', '', $sql);
+                    $pdo->exec($sql);
+                }
+            }
             
             // Auto-migration check: ensure innings has personnel columns
             try {
